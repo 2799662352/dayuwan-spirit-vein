@@ -1,0 +1,68 @@
+{
+  "bsonType": "object",
+  "required": ["title", "creator_id"],
+  "permission": {
+    "read": true,
+    "create": "auth.uid != null",
+    "update": "auth.uid == doc.creator_id || 'admin' in auth.role",
+    "delete": "'admin' in auth.role"
+  },
+  "properties": {
+    "_id": { "description": "路书ID" },
+    "title": {
+      "bsonType": "string",
+      "description": "路书标题"
+    },
+    "description": {
+      "bsonType": "string",
+      "description": "路书描述"
+    },
+    "coverImage": {
+      "bsonType": "string",
+      "description": "封面图"
+    },
+    "nodes": {
+      "bsonType": "array",
+      "description": "路书节点（POI数组）",
+      "items": {
+        "bsonType": "object",
+        "properties": {
+          "poiId": { "bsonType": "string" },
+          "order": { "bsonType": "int" },
+          "title": { "bsonType": "string" },
+          "hint": { "bsonType": "string", "description": "到达提示" },
+          "reward": { "bsonType": "int", "description": "节点奖励" }
+        }
+      }
+    },
+    "creator_id": {
+      "bsonType": "string",
+      "description": "创建者ID"
+    },
+    "trace_data": {
+      "bsonType": "array",
+      "description": "轨迹坐标数组 [[lng,lat], ...]"
+    },
+    "status": {
+      "bsonType": "string",
+      "enum": ["draft", "published", "archived"],
+      "defaultValue": "draft"
+    },
+    "totalReward": {
+      "bsonType": "int",
+      "description": "路书总奖励"
+    },
+    "estimatedTime": {
+      "bsonType": "string",
+      "description": "预计耗时"
+    },
+    "difficulty": {
+      "bsonType": "int",
+      "description": "难度 1-5",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "createTime": { "bsonType": "timestamp" },
+    "updateTime": { "bsonType": "timestamp" }
+  }
+}

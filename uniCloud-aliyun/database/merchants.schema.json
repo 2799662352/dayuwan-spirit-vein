@@ -1,0 +1,43 @@
+{
+  "bsonType": "object",
+  "required": ["name", "qr_secret"],
+  "permission": {
+    "read": "'admin' in auth.role",
+    "create": "'admin' in auth.role",
+    "update": "'admin' in auth.role",
+    "delete": "'admin' in auth.role"
+  },
+  "properties": {
+    "_id": { "description": "商户ID" },
+    "name": {
+      "bsonType": "string",
+      "description": "商户名称"
+    },
+    "qr_secret": {
+      "bsonType": "string",
+      "description": "二维码加密种子"
+    },
+    "daily_quota": {
+      "bsonType": "int",
+      "description": "每日核销配额",
+      "defaultValue": 200
+    },
+    "redeemed_today": {
+      "bsonType": "int",
+      "description": "今日已核销数",
+      "defaultValue": 0
+    },
+    "item_name": {
+      "bsonType": "string",
+      "description": "兑换商品名"
+    },
+    "item_value": {
+      "bsonType": "int",
+      "description": "商品价值(元)"
+    },
+    "active": {
+      "bsonType": "bool",
+      "defaultValue": true
+    }
+  }
+}

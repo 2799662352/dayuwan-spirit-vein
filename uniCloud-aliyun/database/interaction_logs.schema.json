@@ -1,0 +1,37 @@
+{
+  "bsonType": "object",
+  "required": ["userId", "action"],
+  "permission": {
+    "read": "auth.uid == doc.userId || 'admin' in auth.role",
+    "create": true,
+    "update": false,
+    "delete": "'admin' in auth.role"
+  },
+  "properties": {
+    "_id": { "description": "日志ID" },
+    "userId": {
+      "bsonType": "string",
+      "description": "用户ID"
+    },
+    "targetId": {
+      "bsonType": "string",
+      "description": "目标ID（POI/用户等）"
+    },
+    "action": {
+      "bsonType": "string",
+      "description": "操作类型",
+      "enum": ["sow", "reap", "imprint", "scan", "roadbook_complete", "shop_buy", "level_up"]
+    },
+    "amount": {
+      "bsonType": "int",
+      "description": "灵石变动量"
+    },
+    "detail": {
+      "bsonType": "string",
+      "description": "详情描述"
+    },
+    "timestamp": {
+      "bsonType": "timestamp"
+    }
+  }
+}

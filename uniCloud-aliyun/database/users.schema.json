@@ -1,0 +1,71 @@
+{
+  "bsonType": "object",
+  "required": ["openid", "faction"],
+  "permission": {
+    "read": "auth.uid == doc._id || 'admin' in auth.role",
+    "create": true,
+    "update": "auth.uid == doc._id",
+    "delete": "'admin' in auth.role"
+  },
+  "properties": {
+    "_id": { "description": "用户ID" },
+    "openid": {
+      "bsonType": "string",
+      "description": "微信 openid"
+    },
+    "faction": {
+      "bsonType": "string",
+      "description": "阵营",
+      "enum": ["blue", "red"]
+    },
+    "lingshi": {
+      "bsonType": "int",
+      "description": "灵石余额",
+      "minimum": 0,
+      "defaultValue": 3
+    },
+    "xuanjing": {
+      "bsonType": "int",
+      "description": "玄晶余额",
+      "minimum": 0,
+      "defaultValue": 30
+    },
+    "mines_planted": {
+      "bsonType": "int",
+      "defaultValue": 0
+    },
+    "mines_defused_win": {
+      "bsonType": "int",
+      "defaultValue": 0
+    },
+    "mines_defused_fail": {
+      "bsonType": "int",
+      "defaultValue": 0
+    },
+    "redeemed_today": {
+      "bsonType": "int",
+      "defaultValue": 0
+    },
+    "last_share_date": {
+      "bsonType": "string"
+    },
+    "status": {
+      "bsonType": "string",
+      "enum": ["normal", "dying"],
+      "defaultValue": "normal"
+    },
+    "items": {
+      "bsonType": "array",
+      "items": {
+        "bsonType": "object",
+        "properties": {
+          "id": { "bsonType": "string" },
+          "name": { "bsonType": "string" },
+          "count": { "bsonType": "int", "minimum": 0 }
+        }
+      }
+    },
+    "created_at": { "bsonType": "timestamp" },
+    "updated_at": { "bsonType": "timestamp" }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "bsonType": "object",
+  "required": ["name", "location"],
+  "permission": {
+    "read": true,
+    "create": "'admin' in auth.role",
+    "update": "'admin' in auth.role",
+    "delete": "'admin' in auth.role"
+  },
+  "properties": {
+    "_id": { "description": "阵眼ID" },
+    "name": {
+      "bsonType": "string",
+      "description": "阵眼名称"
+    },
+    "location": {
+      "bsonType": "object",
+      "description": "GeoJSON 坐标",
+      "properties": {
+        "type": { "bsonType": "string", "defaultValue": "Point" },
+        "coordinates": {
+          "bsonType": "array",
+          "description": "[经度, 纬度]"
+        }
+      }
+    },
+    "fence_radius": {
+      "bsonType": "int",
+      "description": "围栏半径(米)",
+      "defaultValue": 50
+    },
+    "blue_mines": {
+      "bsonType": "int",
+      "description": "蓝方阵法数",
+      "defaultValue": 0
+    },
+    "red_mines": {
+      "bsonType": "int",
+      "description": "红方阵法数",
+      "defaultValue": 0
+    },
+    "owner": {
+      "bsonType": "string",
+      "description": "归属状态",
+      "enum": ["blue", "red", "contested"],
+      "defaultValue": "contested"
+    },
+    "updated_at": { "bsonType": "timestamp" }
+  }
+}

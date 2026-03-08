@@ -1,0 +1,42 @@
+{
+  "bsonType": "object",
+  "required": ["poi_id", "user_id", "faction"],
+  "permission": {
+    "read": true,
+    "create": "auth.uid != null",
+    "update": "'admin' in auth.role",
+    "delete": "'admin' in auth.role"
+  },
+  "properties": {
+    "_id": { "description": "阵法ID" },
+    "poi_id": {
+      "bsonType": "string",
+      "description": "阵眼 POI ID"
+    },
+    "user_id": {
+      "bsonType": "string",
+      "description": "布阵者 ID"
+    },
+    "faction": {
+      "bsonType": "string",
+      "description": "阵营",
+      "enum": ["blue", "red"]
+    },
+    "voice_url": {
+      "bsonType": "string",
+      "description": "语音神念云存储路径"
+    },
+    "alive": {
+      "bsonType": "bool",
+      "description": "是否存活",
+      "defaultValue": true
+    },
+    "passive_yield_total": {
+      "bsonType": "int",
+      "description": "累计被动产出玄晶",
+      "defaultValue": 0
+    },
+    "last_yield_at": { "bsonType": "timestamp" },
+    "planted_at": { "bsonType": "timestamp" }
+  }
+}

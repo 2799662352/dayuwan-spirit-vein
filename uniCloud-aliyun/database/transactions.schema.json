@@ -1,0 +1,45 @@
+{
+  "bsonType": "object",
+  "required": ["user_id", "type"],
+  "permission": {
+    "read": "auth.uid == doc.user_id || 'admin' in auth.role",
+    "create": true,
+    "update": false,
+    "delete": "'admin' in auth.role"
+  },
+  "properties": {
+    "_id": { "description": "交易ID" },
+    "user_id": {
+      "bsonType": "string",
+      "description": "用户ID"
+    },
+    "type": {
+      "bsonType": "string",
+      "description": "交易类型",
+      "enum": ["plant", "defuse_win", "defuse_fail", "passive", "redeem", "share", "shop_buy", "newbie"]
+    },
+    "lingshi_delta": {
+      "bsonType": "int",
+      "description": "灵石变动",
+      "defaultValue": 0
+    },
+    "xuanjing_delta": {
+      "bsonType": "int",
+      "description": "玄晶变动",
+      "defaultValue": 0
+    },
+    "poi_id": {
+      "bsonType": "string",
+      "description": "关联阵眼ID"
+    },
+    "merchant_id": {
+      "bsonType": "string",
+      "description": "关联商户ID"
+    },
+    "detail": {
+      "bsonType": "string",
+      "description": "详情"
+    },
+    "created_at": { "bsonType": "timestamp" }
+  }
+}

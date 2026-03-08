@@ -1,0 +1,37 @@
+{
+  "name": "与见·DAMO",
+  "appid": "__UNI__YUJIAN",
+  "description": "借假修真，赛博灵境 - 将物理世界映射为修真元宇宙",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "postcss": true,
+      "minified": true
+    },
+    "usingComponents": true,
+    "permission": {
+      "scope.userLocation": {
+        "desc": "寻龙术需要获取你的位置来发现附近的灵韵点"
+      },
+      "scope.userFuzzyLocation": {
+        "desc": "堪舆图需要获取你的大致位置"
+      }
+    },
+    "requiredPrivateInfos": [
+      "getLocation",
+      "chooseLocation"
+    ],
+    "lazyCodeLoading": "requiredComponents"
+  },
+  "h5": {
+    "title": "与见·DAMO",
+    "router": {
+      "mode": "hash"
+    }
+  }
+}

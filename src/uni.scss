@@ -1,0 +1,55 @@
+/* 与见 OS · 大余湾灵脉争夺战 — 全局设计系统 Token */
+
+/* ========== 中性色 ========== */
+$bg-black: #000000;
+$bg-deep: #0A0A0F;
+$bg-overlay: #12121A;
+$text-primary: #F0E6D6;
+$text-secondary: #A98C76;
+$text-muted: #5A4A3A;
+$border-color: #2A1A1A;
+$gold: #FFD700;
+$gold-dim: #8B7355;
+$bronze: #CD7F32;
+
+/* ========== 蓝方 (耕读盟) ========== */
+$faction-blue: #00A8FF;
+$faction-blue-glow: #00D4FF;
+$faction-blue-dark: #003366;
+
+/* ========== 红方 (万金楼) ========== */
+$faction-red: #FF3F3F;
+$faction-red-glow: #FF6B6B;
+$faction-red-dark: #660000;
+
+/* ========== 交火区 ========== */
+$contested: #8B5CF6;
+$contested-dark: #4A3A6A;
+
+/* ========== 功能色 ========== */
+$success: #22C55E;
+$warning: #F59E0B;
+$danger: #EF4444;
+$xuanjing: #00FFFF;
+
+/* ========== 字号 ========== */
+$fs-hero: 64rpx;
+$fs-h1: 44rpx;
+$fs-h2: 36rpx;
+$fs-body: 28rpx;
+$fs-caption: 24rpx;
+$fs-micro: 20rpx;
+
+/* ========== 间距 ========== */
+$space-xs: 8rpx;
+$space-sm: 16rpx;
+$space-md: 24rpx;
+$space-lg: 32rpx;
+$space-xl: 48rpx;
+$space-2xl: 64rpx;
+
+/* ========== 渐变 ========== */
+$gradient-gold: linear-gradient(135deg, #FFA500, #FFD700);
+$gradient-plant: linear-gradient(135deg, #2D5A3D, #1A3A28);
+$gradient-defuse: linear-gradient(135deg, #2A1A0A, #1A0A00);
+$gradient-bronze: linear-gradient(90deg, #CD7F32, #8B6914);
