@@ -1,185 +1,286 @@
 <template>
-  <view class="shop-page">
-    <view class="nav" :style="{ paddingTop: statusBarH + 'px' }">
-      <view class="nav-back" @tap="goBack">
-        <text class="i-tabler-arrow-left nav-icon" />
-      </view>
-      <text class="nav-title">法器商城</text>
-      <view class="nav-placeholder" />
-    </view>
+  <view class="shop">
+    <view class="shop__bg" aria-hidden="true" />
 
-    <scroll-view scroll-y class="shop-scroll">
-      <view class="shop-grid">
-        <view
-          v-for="item in shopItems"
-          :key="item.id"
-          class="shop-card"
-          @tap="onBuy(item)"
-        >
-          <text :class="item.iconClass" class="shop-card__icon" />
-          <text class="shop-card__name">{{ item.name }}</text>
-          <text class="shop-card__desc">{{ item.desc }}</text>
-          <view class="shop-card__price">
-            <text class="i-tabler-hexagon price-icon" />
-            <text class="price-value">{{ item.price }}</text>
-          </view>
+    <view
+      class="shop__inner"
+      :style="{
+        paddingTop: safeTop + 'px',
+        paddingRight: capsuleRight + 'px',
+      }"
+    >
+      <!-- 顶栏：返回 + 篆书标题「聚灵阁」 -->
+      <view class="shop__header">
+        <view class="shop__back" @tap="goBack">
+          <text class="shop__back-glyph">‹</text>
+        </view>
+        <text class="shop__title">聚灵阁</text>
+        <view class="shop__header-slot" />
+      </view>
+
+      <!-- 玄晶余额 -->
+      <view class="balance obsidian-panel">
+        <text class="balance__label">当前玄晶</text>
+        <view class="balance__row">
+          <text class="balance__icon">◆</text>
+          <text class="balance__val">{{ user.userAssets }}</text>
         </view>
       </view>
 
-      <view style="height: 160rpx;" />
-    </scroll-view>
-
-    <!-- 底部余额 -->
-    <view class="balance-bar">
-      <text class="i-tabler-hexagon balance-icon" />
-      <text class="balance-value">{{ userStore.profile?.xuanjing ?? 0 }}</text>
-      <text class="balance-label">玄晶</text>
+      <!-- 商品：黑曜石金边卡 -->
+      <scroll-view scroll-y class="shop__scroll" :show-scrollbar="false">
+        <view
+          v-for="item in shopItems"
+          :key="item.id"
+          class="item-card obsidian-panel obsidian-panel--gold"
+        >
+          <view class="item-card__main">
+            <text class="item-card__name">{{ item.name }}</text>
+            <text class="item-card__gain">+{{ item.amount }} 玄晶</text>
+            <text class="item-card__desc">{{ item.desc }}</text>
+          </view>
+          <view class="btn-claim" @tap="onBuy(item)">
+            <text class="btn-claim__text">领取</text>
+          </view>
+        </view>
+        <view class="shop__scroll-pad" />
+      </scroll-view>
     </view>
-
-    <!-- 购买确认弹窗 -->
-    <YjModal
-      :visible="showConfirm"
-      :title="`购买 ${buyTarget?.name ?? ''}`"
-      :desc="`消耗 ${buyTarget?.price ?? 0} 玄晶`"
-      confirm-text="确认购买"
-      cancel-text="取消"
-      @confirm="confirmBuy"
-      @close="showConfirm = false"
-    />
   </view>
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue'
+<script setup>
+import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { useAudioStore } from '@/stores/audio'
-import { callCloud } from '@/utils/cloud'
-import YjModal from '@/components/YjModal.vue'
 
-interface ShopItem {
-  id: string
-  name: string
-  desc: string
-  iconClass: string
-  price: number
-}
+const user = useUserStore()
+const safeTop = ref(44)
+/** 与首页一致：避让微信胶囊，避免内容顶到菜单区 */
+const capsuleRight = ref(100)
 
-const userStore = useUserStore()
-const audioStore = useAudioStore()
-
-const statusBarH = ref(20)
-try { statusBarH.value = uni.getSystemInfoSync().statusBarHeight || 20 } catch (_) {}
-
-const shopItems: ShopItem[] = [
-  { id: 'tianyan', name: '天眼通', desc: '透视全图阵眼详情 30s', iconClass: 'i-tabler-eye', price: 50 },
-  { id: 'jiagu', name: '加固符', desc: '指定阵法防御 +50%', iconClass: 'i-tabler-shield', price: 30 },
+const shopItems = [
+  { id: 'pill-s', name: '聚灵丹·小', amount: 200, desc: '补充少量灵力' },
+  { id: 'pill-m', name: '聚灵丹·中', amount: 500, desc: '补充中量灵力' },
+  { id: 'pill-l', name: '聚灵丹·大', amount: 1000, desc: '补充大量灵力' },
 ]
 
-const showConfirm = ref(false)
-const buyTarget = ref<ShopItem | null>(null)
-
-function onBuy(item: ShopItem) {
-  buyTarget.value = item
-  showConfirm.value = true
-  audioStore.playSfx('click')
+function onBuy(item) {
+  user.updateXuanjing(item.amount)
+  uni.showToast({ title: `+${item.amount} 玄晶`, icon: 'none' })
 }
 
-async function confirmBuy() {
-  if (!buyTarget.value || !userStore.profile) return
-  const { id, price } = buyTarget.value
+function goBack() {
+  uni.navigateBack()
+}
 
-  if (userStore.profile.xuanjing < price) {
-    uni.showToast({ title: '玄晶不足', icon: 'none' })
-    showConfirm.value = false
-    return
+onMounted(() => {
+  // #ifdef MP-WEIXIN
+  try {
+    const capsule = uni.getMenuButtonBoundingClientRect()
+    safeTop.value = capsule.top
+    const sysInfo = uni.getWindowInfo()
+    capsuleRight.value = sysInfo.windowWidth - capsule.left + 8
+  } catch {
+    /* ignore */
   }
+  // #endif
+  // #ifdef H5
+  safeTop.value = 12
+  capsuleRight.value = 16
+  // #endif
 
-  userStore.updateXuanjing(-price)
-  const existing = userStore.profile.items.find(i => i.id === id)
-  if (existing) existing.count++
-
-  await callCloud('shop-buy', { itemId: id })
-
-  showConfirm.value = false
-  audioStore.playSfx('click')
-  uni.showToast({ title: `获得 ${buyTarget.value.name}!`, icon: 'none' })
-}
-
-function goBack() { uni.navigateBack() }
+  if (!user.isLoggedIn) user.wxLogin()
+})
 </script>
 
 <style scoped>
-.shop-page { min-height: 100vh; background: #000000; }
-
-.nav {
-  display: flex;
-  align-items: center;
-  padding: 0 24rpx;
-  height: 88rpx;
-  background: rgba(0, 0, 0, 0.9);
-  position: sticky;
-  top: 0;
-  z-index: 20;
+.shop {
+  position: relative;
+  min-height: 100vh;
+  background: #000000;
 }
 
-.nav-back { width: 56rpx; height: 56rpx; display: flex; align-items: center; justify-content: center; }
-.nav-icon { color: #A98C76; font-size: 28rpx; }
-.nav-title { flex: 1; text-align: center; color: #FFD700; font-size: 32rpx; font-weight: 700; }
-.nav-placeholder { width: 56rpx; }
-
-.shop-scroll { height: calc(100vh); }
-
-.shop-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20rpx;
-  padding: 24rpx;
-}
-
-.shop-card {
-  width: calc(50% - 10rpx);
-  background: #0A0A0F;
-  border: 1rpx solid #2A1A1A;
-  border-radius: 20rpx;
-  padding: 28rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12rpx;
-  transition: all 200ms ease-out;
-}
-
-.shop-card__icon { font-size: 52rpx; color: #FFD700; }
-.shop-card__name { color: #FFD700; font-size: 28rpx; font-weight: 600; }
-.shop-card__desc { color: #A98C76; font-size: 22rpx; text-align: center; }
-
-.shop-card__price {
-  display: flex;
-  align-items: center;
-  gap: 6rpx;
-  margin-top: 8rpx;
-}
-
-.price-icon { color: #00FFFF; font-size: 20rpx; }
-.price-value { color: #00FFFF; font-size: 28rpx; font-weight: 700; }
-
-.balance-bar {
+.shop__bg {
   position: fixed;
+  top: 0;
+  right: 0;
   bottom: 0;
   left: 0;
-  right: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(251, 191, 36, 0.08), transparent 55%),
+    radial-gradient(ellipse 90% 60% at 100% 50%, rgba(34, 211, 238, 0.06), transparent 45%),
+    #000000;
+  pointer-events: none;
+}
+
+.shop__inner {
+  position: relative;
+  z-index: 1;
+  padding-left: 28rpx;
+  padding-bottom: 48rpx;
+  box-sizing: border-box;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shop__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 8rpx;
+  margin-bottom: 28rpx;
+}
+
+.shop__back {
+  width: 72rpx;
+  height: 72rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
-  padding: 24rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom, 0px));
-  background: rgba(0, 0, 0, 0.9);
-  border-top: 1rpx solid #2A1A1A;
-  z-index: 20;
+  border-radius: 16rpx;
+  background: rgba(24, 24, 28, 0.85);
+  border: 1rpx solid rgba(251, 191, 36, 0.35);
+  box-shadow: 0 0 20rpx rgba(251, 191, 36, 0.12);
 }
 
-.balance-icon { color: #00FFFF; font-size: 28rpx; }
-.balance-value { color: #00FFFF; font-size: 36rpx; font-weight: 700; font-variant-numeric: tabular-nums; }
-.balance-label { color: #5A4A3A; font-size: 24rpx; }
+.shop__back-glyph {
+  font-size: 40rpx;
+  line-height: 1;
+  color: #fbbf24;
+  font-weight: 700;
+  margin-top: -4rpx;
+}
+
+/* 篆书/碑刻感标题 + 霓虹描边（text-shadow / box-shadow，无 filter） */
+.shop__title {
+  flex: 1;
+  text-align: center;
+  font-size: 46rpx;
+  font-weight: 800;
+  letter-spacing: 0.42em;
+  color: #fde68a;
+  font-family: 'STXingkai', 'KaiTi', 'LiSu', 'FangSong', 'Songti SC', 'SimSun', serif;
+  text-shadow: 0 0 18rpx rgba(251, 191, 36, 0.85), 0 0 48rpx rgba(34, 211, 238, 0.25),
+    0 0 2rpx rgba(255, 255, 255, 0.35);
+}
+
+.shop__header-slot {
+  width: 72rpx;
+  height: 72rpx;
+}
+
+.balance {
+  margin-bottom: 32rpx;
+  padding: 24rpx 28rpx;
+}
+
+.balance__label {
+  display: block;
+  font-size: 22rpx;
+  color: rgba(167, 139, 250, 0.75);
+  letter-spacing: 0.2em;
+  margin-bottom: 12rpx;
+}
+
+.balance__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.balance__icon {
+  font-size: 28rpx;
+  color: #22d3ee;
+  margin-right: 12rpx;
+  text-shadow: 0 0 14rpx rgba(34, 211, 238, 0.5);
+}
+
+.balance__val {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #fbbf24;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12rpx rgba(251, 191, 36, 0.45);
+}
+
+.obsidian-panel {
+  background: linear-gradient(145deg, rgba(28, 28, 32, 0.92) 0%, rgba(12, 12, 16, 0.96) 100%);
+  border: 1rpx solid rgba(100, 100, 120, 0.35);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.45), 0 0 1rpx rgba(255, 255, 255, 0.06) inset;
+}
+
+.obsidian-panel--gold {
+  border: 1rpx solid rgba(251, 191, 36, 0.45);
+  box-shadow: 0 8rpx 36rpx rgba(0, 0, 0, 0.5), 0 0 24rpx rgba(251, 191, 36, 0.08);
+}
+
+.shop__scroll {
+  flex: 1;
+  height: 0;
+  min-height: 400rpx;
+}
+
+.shop__scroll-pad {
+  height: 48rpx;
+}
+
+.item-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.item-card__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-right: 20rpx;
+}
+
+.item-card__name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #fef3c7;
+  margin-bottom: 8rpx;
+  letter-spacing: 0.06em;
+}
+
+.item-card__gain {
+  font-size: 26rpx;
+  color: #22d3ee;
+  margin-bottom: 10rpx;
+  text-shadow: 0 0 10rpx rgba(34, 211, 238, 0.35);
+}
+
+.item-card__desc {
+  font-size: 22rpx;
+  color: rgba(180, 180, 190, 0.85);
+  line-height: 1.45;
+}
+
+/* 金渐变描边圆角按钮，内层深底白字 */
+.btn-claim {
+  padding: 3rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #d97706 100%);
+  box-shadow: 0 0 20rpx rgba(251, 191, 36, 0.35);
+}
+
+.btn-claim__text {
+  display: block;
+  padding: 18rpx 36rpx;
+  border-radius: 999rpx;
+  background: rgba(10, 10, 14, 0.92);
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+  letter-spacing: 0.12em;
+}
 </style>

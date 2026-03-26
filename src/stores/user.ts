@@ -35,6 +35,9 @@ export const useUserStore = defineStore('user', () => {
 
   const faction = computed<Faction | null>(() => profile.value?.faction ?? null)
 
+  /** 与旧 game 商店对齐：玄晶余额（无档案时为 0） */
+  const userAssets = computed(() => profile.value?.xuanjing ?? 0)
+
   async function wxLogin() {
     try {
       const loginRes = await uni.login({ provider: 'weixin' })
@@ -53,7 +56,7 @@ export const useUserStore = defineStore('user', () => {
         openid: mockOpenid,
         faction: assignFaction(mockOpenid),
         lingshi: 3,
-        xuanjing: 30,
+        xuanjing: 1000,
         mines_planted: 0,
         mines_defused_win: 0,
         mines_defused_fail: 0,
@@ -96,16 +99,50 @@ export const useUserStore = defineStore('user', () => {
     return !!profile.value && profile.value.xuanjing >= 100 && profile.value.redeemed_today < 2
   }
 
+  /**
+   * 严格交替：mock_camp_count % 2，偶数 → 1（耕读盟 / blue），奇数 → 2（万金楼 / red），随后计数 +1 写回。
+   */
+  function allocateCamp(): 1 | 2 {
+    let count = 0
+    try {
+      const stored = uni.getStorageSync('mock_camp_count')
+      count = typeof stored === 'number' ? stored : 0
+    } catch {
+      /* ignore */
+    }
+    const camp: 1 | 2 = count % 2 === 0 ? 1 : 2
+    try {
+      uni.setStorageSync('mock_camp_count', count + 1)
+    } catch {
+      /* ignore */
+    }
+    if (profile.value) {
+      profile.value.faction = camp === 1 ? 'blue' : 'red'
+    }
+    return camp
+  }
+
+  /** 扣除玄晶；余额不足或 amount 非法时返回 false */
+  function costCrystal(amount: number): boolean {
+    if (amount <= 0) return false
+    if (!profile.value || profile.value.xuanjing < amount) return false
+    updateXuanjing(-amount)
+    return true
+  }
+
   return {
     profile,
     isLoggedIn,
     isDying,
     faction,
+    userAssets,
     wxLogin,
     updateLingshi,
     updateXuanjing,
     canPlant,
     canDefuse,
     canRedeem,
+    allocateCamp,
+    costCrystal,
   }
 })

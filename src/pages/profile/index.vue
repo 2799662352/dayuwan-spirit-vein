@@ -1,259 +1,378 @@
 <template>
   <view class="profile-page">
-    <view class="nav" :style="{ paddingTop: statusBarH + 'px' }">
-      <view class="nav-back" @tap="goBack">
-        <text class="i-tabler-arrow-left nav-icon" />
+    <view class="profile-body" :style="{ paddingTop: safeTop + 'px' }">
+      <!-- 1 安全区由 paddingTop 承担 -->
+
+      <!-- 2 阵营条幅 -->
+      <view
+        class="faction-banner"
+        :class="{
+          'faction-banner--blue': user.faction === 'blue',
+          'faction-banner--red': user.faction === 'red',
+          'faction-banner--empty': !user.faction,
+        }"
+      >
+        <text class="faction-banner__seal">{{ sealGlyph }}</text>
+        <view class="faction-banner__meta">
+          <text class="faction-banner__name">{{ factionDisplayName }}</text>
+        </view>
       </view>
-      <text class="nav-title">修行者简报</text>
-      <view class="nav-placeholder" />
+
+      <!-- 3 资产 -->
+      <view class="panel">
+        <text class="panel__title">资产</text>
+        <view class="assets-row">
+          <view class="assets-item">
+            <text class="assets-item__label">玄晶</text>
+            <text class="assets-item__value assets-item__value--cyan">{{ user.profile?.xuanjing ?? 0 }}</text>
+          </view>
+          <view class="assets-item">
+            <text class="assets-item__label">灵石</text>
+            <text class="assets-item__value assets-item__value--gold">{{ user.profile?.lingshi ?? 0 }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 4 战绩统计 -->
+      <view class="panel">
+        <text class="panel__title">战绩</text>
+        <view class="stat-row">
+          <text class="stat-row__label">布阵次数</text>
+          <text class="stat-row__value">{{ user.profile?.mines_planted ?? 0 }}</text>
+        </view>
+        <view class="stat-row stat-row--divider">
+          <text class="stat-row__label">破阵胜利</text>
+          <text class="stat-row__value stat-row__value--win">{{ user.profile?.mines_defused_win ?? 0 }}</text>
+        </view>
+        <view class="stat-row stat-row--divider">
+          <text class="stat-row__label">破阵失败</text>
+          <text class="stat-row__value stat-row__value--fail">{{ user.profile?.mines_defused_fail ?? 0 }}</text>
+        </view>
+      </view>
+
+      <!-- 5 道具 -->
+      <view class="panel">
+        <text class="panel__title">道具</text>
+        <view v-for="item in displayItems" :key="item.id" class="item-row">
+          <text class="item-row__name">{{ item.name }}</text>
+          <text class="item-row__count">×{{ item.count }}</text>
+        </view>
+        <view v-if="!displayItems.length" class="item-empty">
+          <text class="item-empty__text">暂无道具</text>
+        </view>
+      </view>
+
+      <view class="scroll-spacer" />
     </view>
 
-    <scroll-view scroll-y class="profile-scroll">
-      <!-- 阵营卡片 -->
-      <view class="faction-card" :class="`faction-card--${userStore.faction}`">
-        <view class="faction-badge">
-          <text class="faction-badge__text">{{ userStore.faction === 'blue' ? '耕读盟' : '万金楼' }}</text>
-        </view>
-        <text class="faction-openid">{{ userStore.profile?.openid?.slice(0, 8) }}...</text>
+    <!-- 6 返回 -->
+    <view class="footer">
+      <view class="btn-back" @tap="goBack">
+        <text class="btn-back__text">返回</text>
       </view>
-
-      <!-- 资产 -->
-      <view class="stats-grid">
-        <view class="stat-card">
-          <text class="i-tabler-diamond stat-icon stat-icon--lingshi" />
-          <text class="stat-value stat-value--lingshi">{{ userStore.profile?.lingshi ?? 0 }}</text>
-          <text class="stat-label">灵石</text>
-        </view>
-        <view class="stat-card">
-          <text class="i-tabler-hexagon stat-icon stat-icon--xuanjing" />
-          <text class="stat-value stat-value--xuanjing">{{ userStore.profile?.xuanjing ?? 0 }}</text>
-          <text class="stat-label">玄晶</text>
-        </view>
-      </view>
-
-      <!-- 战绩 -->
-      <view class="section">
-        <text class="section-title">战绩</text>
-        <view class="record-card">
-          <view class="record-row">
-            <text class="record-label">布阵次数</text>
-            <text class="record-value">{{ userStore.profile?.mines_planted ?? 0 }}</text>
-          </view>
-          <view class="record-row">
-            <text class="record-label">破阵成功</text>
-            <text class="record-value record-value--success">{{ userStore.profile?.mines_defused_win ?? 0 }}</text>
-          </view>
-          <view class="record-row">
-            <text class="record-label">破阵失败</text>
-            <text class="record-value record-value--fail">{{ userStore.profile?.mines_defused_fail ?? 0 }}</text>
-          </view>
-          <view class="record-row">
-            <text class="record-label">今日核销</text>
-            <text class="record-value">{{ userStore.profile?.redeemed_today ?? 0 }} / 2</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 道具 -->
-      <view class="section">
-        <text class="section-title">法器背包</text>
-        <view class="items-list">
-          <view v-for="item in userStore.profile?.items" :key="item.id" class="item-row">
-            <text class="item-name">{{ item.name }}</text>
-            <text class="item-count">x{{ item.count }}</text>
-          </view>
-          <view v-if="!userStore.profile?.items?.length" class="empty-state">
-            <text class="empty-text">暂无法器, 前往商城购买</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 功能入口 -->
-      <view class="section">
-        <view class="menu-item" @tap="goShop">
-          <text class="i-tabler-building-store menu-icon" />
-          <text class="menu-label">法器商城</text>
-          <text class="i-tabler-chevron-right menu-arrow" />
-        </view>
-        <view class="menu-item" @tap="doShare">
-          <text class="i-tabler-share menu-icon" />
-          <text class="menu-label">分享得灵石</text>
-          <text class="menu-sub">每日 1 次</text>
-          <text class="i-tabler-chevron-right menu-arrow" />
-        </view>
-      </view>
-
-      <view style="height: 100rpx;" />
-    </scroll-view>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { callCloud } from '@/utils/cloud'
+import { getFactionName } from '@/utils/faction'
+import type { ShopItem } from '@/stores/user'
 
-const userStore = useUserStore()
+const user = useUserStore()
+const safeTop = ref(44)
 
-const statusBarH = ref(20)
-try { statusBarH.value = uni.getSystemInfoSync().statusBarHeight || 20 } catch (_) {}
+const factionDisplayName = computed(() => {
+  if (!user.faction) return '——'
+  return getFactionName(user.faction)
+})
 
-function goBack() { uni.navigateBack() }
+const sealGlyph = computed(() => {
+  if (user.faction === 'blue') return '盟'
+  if (user.faction === 'red') return '楼'
+  return '道'
+})
 
-function goShop() { uni.navigateTo({ url: '/pages/shop/index' }) }
+const displayItems = computed((): ShopItem[] => {
+  const list = user.profile?.items
+  if (list && list.length) return list
+  return [
+    { id: 'tianyan', name: '天眼通', count: 0 },
+    { id: 'jiagu', name: '加固符', count: 0 },
+  ]
+})
 
-async function doShare() {
-  const today = new Date().toISOString().slice(0, 10)
-  if (userStore.profile?.last_share_date === today) {
-    uni.showToast({ title: '今日已领取', icon: 'none' })
-    return
-  }
-
-  // TODO: 接入真实分享 API
-  userStore.updateLingshi(1)
-  if (userStore.profile) userStore.profile.last_share_date = today
-  await callCloud('daily-share')
-  uni.showToast({ title: '获得 1 灵石!', icon: 'none' })
+function goBack() {
+  uni.navigateBack()
 }
+
+onMounted(() => {
+  // #ifdef MP-WEIXIN
+  try {
+    const c = uni.getMenuButtonBoundingClientRect()
+    safeTop.value = c.top
+  } catch {}
+  // #endif
+  // #ifdef H5
+  safeTop.value = 12
+  // #endif
+
+  if (!user.isLoggedIn) {
+    user.wxLogin()
+  }
+})
 </script>
 
-<style scoped>
-.profile-page { min-height: 100vh; background: #000000; }
+<style lang="scss" scoped>
+$color-bg: #000000;
+$obsidian-bg: rgba(20, 20, 20, 0.7);
+$obsidian-border: rgba(0, 255, 255, 0.3);
+$cyan-neon: #00e5ff;
+$red-neon: #ff4444;
+$gold-neon: #ffd700;
+$text-muted: #8899aa;
+$heading-glow: 0 0 16rpx rgba(0, 255, 255, 0.45);
+$num-mono: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
 
-.nav {
-  display: flex; align-items: center; padding: 0 24rpx; height: 88rpx;
-  background: rgba(0, 0, 0, 0.9); position: sticky; top: 0; z-index: 20;
-}
-.nav-back { width: 56rpx; height: 56rpx; display: flex; align-items: center; justify-content: center; }
-.nav-icon { color: #A98C76; font-size: 28rpx; }
-.nav-title { flex: 1; text-align: center; color: #F0E6D6; font-size: 32rpx; font-weight: 700; }
-.nav-placeholder { width: 56rpx; }
-
-.profile-scroll { height: calc(100vh); }
-
-.faction-card {
-  margin: 24rpx;
-  padding: 36rpx 28rpx;
-  border-radius: 20rpx;
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  border: 1rpx solid;
-}
-
-.faction-card--blue {
-  background: rgba(0, 168, 255, 0.05);
-  border-color: rgba(0, 168, 255, 0.2);
-}
-
-.faction-card--red {
-  background: rgba(255, 63, 63, 0.05);
-  border-color: rgba(255, 63, 63, 0.2);
-}
-
-.faction-badge {
-  padding: 8rpx 20rpx;
-  border-radius: 8rpx;
-}
-
-.faction-card--blue .faction-badge { background: rgba(0, 168, 255, 0.15); }
-.faction-card--red .faction-badge { background: rgba(255, 63, 63, 0.15); }
-
-.faction-badge__text {
-  font-size: 28rpx;
-  font-weight: 700;
-}
-
-.faction-card--blue .faction-badge__text { color: #00A8FF; }
-.faction-card--red .faction-badge__text { color: #FF3F3F; }
-
-.faction-openid { color: #5A4A3A; font-size: 22rpx; }
-
-.stats-grid {
-  display: flex;
-  gap: 20rpx;
-  padding: 0 24rpx;
-  margin-bottom: 24rpx;
-}
-
-.stat-card {
-  flex: 1;
-  background: #0A0A0F;
-  border: 1rpx solid #2A1A1A;
-  border-radius: 16rpx;
-  padding: 24rpx;
+.profile-page {
+  min-height: 100vh;
+  background: $color-bg;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8rpx;
 }
 
-.stat-icon { font-size: 36rpx; }
-.stat-icon--lingshi { color: #FFD700; }
-.stat-icon--xuanjing { color: #00FFFF; }
-
-.stat-value { font-size: 44rpx; font-weight: 700; font-variant-numeric: tabular-nums; }
-.stat-value--lingshi { color: #FFD700; }
-.stat-value--xuanjing { color: #00FFFF; }
-
-.stat-label { color: #5A4A3A; font-size: 22rpx; }
-
-.section { padding: 0 24rpx; margin-bottom: 16rpx; }
-.section-title { color: #A98C76; font-size: 26rpx; font-weight: 500; padding: 16rpx 0; display: block; }
-
-.record-card {
-  background: #0A0A0F;
-  border: 1rpx solid #2A1A1A;
-  border-radius: 16rpx;
-  padding: 8rpx 24rpx;
+.profile-body {
+  flex: 1;
+  padding-left: 24rpx;
+  padding-right: 24rpx;
+  padding-bottom: 24rpx;
+  box-sizing: border-box;
 }
 
-.record-row {
+.faction-banner {
+  width: 100%;
+  margin-bottom: 28rpx;
+  padding: 32rpx 28rpx;
+  border-radius: 24rpx;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.faction-banner--blue {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.38) 0%, rgba(0, 60, 90, 0.55) 100%);
+  border: 1rpx solid rgba(0, 229, 255, 0.55);
+  box-shadow: 0 0 24rpx rgba(0, 229, 255, 0.28);
+}
+
+.faction-banner--red {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.42) 0%, rgba(90, 16, 16, 0.58) 100%);
+  border: 1rpx solid rgba(255, 68, 68, 0.55);
+  box-shadow: 0 0 24rpx rgba(255, 68, 68, 0.24);
+}
+
+.faction-banner--empty {
+  background: linear-gradient(135deg, rgba(60, 60, 60, 0.5) 0%, rgba(20, 20, 20, 0.72) 100%);
+  border: 1rpx solid rgba(0, 255, 255, 0.2);
+}
+
+.faction-banner__seal {
+  font-size: 112rpx;
+  font-weight: 700;
+  line-height: 1;
+  margin-right: 24rpx;
+  color: #ffffff;
+  text-shadow: 0 0 20rpx rgba(255, 255, 255, 0.35);
+}
+
+.faction-banner--blue .faction-banner__seal {
+  color: $cyan-neon;
+  text-shadow: 0 0 28rpx rgba(0, 229, 255, 0.6);
+}
+
+.faction-banner--red .faction-banner__seal {
+  color: $red-neon;
+  text-shadow: 0 0 28rpx rgba(255, 68, 68, 0.55);
+}
+
+.faction-banner__meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.faction-banner__name {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #e8ffff;
+  text-shadow: $heading-glow;
+}
+
+.faction-banner--red .faction-banner__name {
+  text-shadow: 0 0 16rpx rgba(255, 68, 68, 0.45);
+}
+
+.panel {
+  background: $obsidian-bg;
+  border: 1rpx solid $obsidian-border;
+  border-radius: 24rpx;
+  padding: 28rpx 24rpx;
+  margin-bottom: 24rpx;
+  box-sizing: border-box;
+}
+
+.panel__title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: $cyan-neon;
+  margin-bottom: 20rpx;
+  text-shadow: 0 0 12rpx rgba(0, 255, 255, 0.35);
+}
+
+.assets-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.assets-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.assets-item + .assets-item {
+  margin-left: 24rpx;
+}
+
+.assets-item__label {
+  font-size: 24rpx;
+  color: $text-muted;
+  margin-bottom: 8rpx;
+}
+
+.assets-item__value {
+  font-size: 44rpx;
+  font-weight: 700;
+  font-family: $num-mono;
+  font-variant-numeric: tabular-nums;
+}
+
+.assets-item__value--cyan {
+  color: $cyan-neon;
+  text-shadow: 0 0 14rpx rgba(0, 229, 255, 0.55);
+}
+
+.assets-item__value--gold {
+  color: $gold-neon;
+  text-shadow: 0 0 14rpx rgba(255, 215, 0, 0.45);
+}
+
+.stat-row {
+  display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 16rpx 0;
+  padding-top: 16rpx;
+  padding-bottom: 16rpx;
 }
 
-.record-row + .record-row { border-top: 1rpx solid rgba(42, 26, 26, 0.5); }
+.stat-row--divider {
+  border-top: 1rpx solid rgba(0, 255, 255, 0.12);
+}
 
-.record-label { color: #A98C76; font-size: 26rpx; }
-.record-value { color: #F0E6D6; font-size: 28rpx; font-weight: 600; font-variant-numeric: tabular-nums; }
-.record-value--success { color: #22C55E; }
-.record-value--fail { color: #EF4444; }
+.stat-row__label {
+  font-size: 28rpx;
+  color: $text-muted;
+}
 
-.items-list {
-  background: #0A0A0F;
-  border: 1rpx solid #2A1A1A;
-  border-radius: 16rpx;
-  padding: 8rpx 24rpx;
+.stat-row__value {
+  font-size: 30rpx;
+  font-weight: 600;
+  font-family: $num-mono;
+  font-variant-numeric: tabular-nums;
+  color: #e0f4ff;
+  text-shadow: 0 0 10rpx rgba(0, 229, 255, 0.25);
+}
+
+.stat-row__value--win {
+  color: #5eead4;
+  text-shadow: 0 0 10rpx rgba(94, 234, 212, 0.35);
+}
+
+.stat-row__value--fail {
+  color: #fca5a5;
+  text-shadow: 0 0 10rpx rgba(252, 165, 165, 0.35);
 }
 
 .item-row {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
-  padding: 16rpx 0;
-}
-
-.item-name { color: #F0E6D6; font-size: 26rpx; }
-.item-count { color: #FFD700; font-size: 26rpx; font-weight: 600; }
-
-.empty-state { padding: 32rpx 0; display: flex; justify-content: center; }
-.empty-text { color: #5A4A3A; font-size: 24rpx; }
-
-.menu-item {
-  display: flex;
   align-items: center;
-  padding: 24rpx;
-  background: #0A0A0F;
-  border: 1rpx solid #2A1A1A;
-  border-radius: 16rpx;
-  margin-bottom: 12rpx;
-  gap: 16rpx;
+  padding-top: 14rpx;
+  padding-bottom: 14rpx;
 }
 
-.menu-icon { color: #FFD700; font-size: 32rpx; }
-.menu-label { color: #F0E6D6; font-size: 28rpx; flex: 1; }
-.menu-sub { color: #5A4A3A; font-size: 22rpx; }
-.menu-arrow { color: #5A4A3A; font-size: 24rpx; }
+.item-row + .item-row {
+  border-top: 1rpx solid rgba(0, 255, 255, 0.12);
+}
+
+.item-row__name {
+  font-size: 28rpx;
+  color: #e8eaed;
+}
+
+.item-row__count {
+  font-size: 28rpx;
+  font-weight: 600;
+  font-family: $num-mono;
+  font-variant-numeric: tabular-nums;
+  color: $gold-neon;
+  text-shadow: 0 0 10rpx rgba(255, 215, 0, 0.35);
+}
+
+.item-empty {
+  padding-top: 16rpx;
+  padding-bottom: 8rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.item-empty__text {
+  font-size: 26rpx;
+  color: $text-muted;
+}
+
+.scroll-spacer {
+  height: 32rpx;
+}
+
+.footer {
+  padding: 24rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+}
+
+.btn-back {
+  background: $obsidian-bg;
+  border: 1rpx solid $obsidian-border;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 18rpx rgba(0, 255, 255, 0.12);
+}
+
+.btn-back__text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: $cyan-neon;
+  text-shadow: 0 0 12rpx rgba(0, 255, 255, 0.35);
+}
 </style>

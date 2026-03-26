@@ -1,7 +1,26 @@
 {
   "pages": [
     {
-      "path": "pages/battlefield/index",
+      "path": "pages/guide/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "white",
+        "navigationBarTitleText": "",
+        "navigationBarBackgroundColor": "#000000",
+        "backgroundColor": "#000000",
+        "backgroundColorTop": "#000000",
+        "disableScroll": true,
+        "app-plus": {
+          "bounce": "none",
+          "statusbar": {
+            "immersive": true
+          },
+          "titleNView": false
+        }
+      }
+    },
+    {
+      "path": "pages/index/index",
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "",
@@ -12,7 +31,7 @@
       }
     },
     {
-      "path": "pages/defuse/index",
+      "path": "pages/arScan/index",
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "",
@@ -24,18 +43,7 @@
       }
     },
     {
-      "path": "pages/voice-record/index",
-      "style": {
-        "navigationStyle": "custom",
-        "navigationBarTitleText": "",
-        "backgroundColor": "#000000",
-        "app-plus": {
-          "bounce": "none"
-        }
-      }
-    },
-    {
-      "path": "pages/redeem/index",
+      "path": "pages/profile/index",
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "",
@@ -44,14 +52,6 @@
     },
     {
       "path": "pages/shop/index",
-      "style": {
-        "navigationStyle": "custom",
-        "navigationBarTitleText": "",
-        "backgroundColor": "#000000"
-      }
-    },
-    {
-      "path": "pages/profile/index",
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "",
